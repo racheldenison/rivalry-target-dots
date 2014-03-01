@@ -11,6 +11,9 @@
 %
 % Rachel Denison, 28 Feb 2014
 
+clear all
+close all
+
 global pixelsPerDegree;
 global spaceBetweenMultiplier;
 
@@ -18,14 +21,23 @@ global spaceBetweenMultiplier;
 % testing location
 location = 'laptop';
 
+% save data file?
+saveData = 0;
+
 % i/o
 dataDirectoryPath = 'data/';
 
-% params
-spatialFreq = 3;
-responseDuration = 10;
+% screen
+% RD' laptop
+screenSize = [9 13]; % (in)
+screenRes = [900 1440];
+viewDist = 50; % (in)
 
-contrastParam = [0.1];
+% rivalry params
+spatialFreq = 3;
+rivalryDurationRange = [1 3];
+
+contrastParam = 1;
 numContrastVariations = length(contrastParam);
 
 eyeLeftTiltParam = [1 2]; % in which eye is the left-tilted grating?
@@ -36,6 +48,14 @@ numEyeTargetDotsVariations = length(eyeTargetDotsParam);
 
 % number of repetitions of each condition
 numReps = 3;
+
+% target dot params
+targetDot.nDots = 6;
+targetDot.color = 0.5;
+targetDot.sz = 50;
+targetDot.sigma = 8;
+targetDot.amp = 0.8;
+targetDot.duration = 0.3;
 
 % catch trials
 % ** should we have both rivalry catch trials and target dots catch trials
@@ -48,7 +68,7 @@ alignmentTargetKeypress = 0; % 1 to wait for a keypress after each alignment tar
 alignmentTargetDuration = 1; % time in secons to leave on alignment targets (if not waiting, can set to empty)
 
 % spacing between rivalry images
-spaceBetweenMultiplier = 3; 
+spaceBetweenMultiplier = 3; % standard is 3
 
 % sound
 soundOn = 1; % 1 for on, 0 for off
@@ -57,7 +77,7 @@ soundvector = 0.25 * sin(2*pi*v/30); % a nice beep at 2kH samp freq
 
 %% Hello to the experimenter
 % can write any reminders to the experimenter here
-fprintf('Welcome to the Repetition Target Dots study\n\n');
+fprintf('\nWelcome to the Rivalry Target Dots study\n');
 
 %% Display setup
 % PTB-3 correctly installed and functional? Abort otherwise.
@@ -66,15 +86,20 @@ AssertOpenGL;
 Screen('Preference', 'VisualDebuglevel', 3); % replaces startup screen with black display
 screenNumber = max(Screen('Screens'));
 
-% window = Screen('OpenWindow', screenNumber);
-window = Screen('OpenWindow', 0, [], [0 0 800 600]);
+window = Screen('OpenWindow', screenNumber);
+% window = Screen('OpenWindow', 0, [], [0 0 800 600]); % for testing
 
 % Enable alpha-blending, set it to desired blend equation.
 Screen('BlendFunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); % if using a transparent mask
  
-%%%% come back %%%%
-% pixelsPerDegree = ang2pix(x);   %number of pixels in one degree of visual angle
-% Screen('LoadNormalizedGammaTable', screenNumber, gammaTable);
+% number of pixels in one degree of visual angle
+pixelsPerDegree = ang2pix(1.0, screenSize(1), screenRes(1), viewDist, 'central');
+
+if exist('gammaTable','var')
+    Screen('LoadNormalizedGammaTable', screenNumber, gammaTable);
+else
+    fprintf('/nNot loading gamma table/n')
+end
  
 black = BlackIndex(window);  % Retrieves the CLUT color code for black.
 white = WhiteIndex(window);  % Retrieves the CLUT color code for white.
@@ -102,6 +127,7 @@ leftKeyCode (1:256) = 0;
 leftKeyCode (KbName (leftKey)) = 1; % creates the keyCode vector
 
 response = 1;
+fprintf('\n')
 while ~isempty (response)
     fprintf('The key assigned for LEFT is: %s \n', KbName(leftKeyCode));
     response = input ('Hit "enter" to keep this value or a new key to change it.\n','s');
@@ -127,7 +153,7 @@ while ~isempty (response)
 end
 
 %% Subject ID and filename
-subjectID = input ('\nPlease input the alphanumeric code specifier for the subject: ','s');
+subjectID = input ('Please input the subject ID: ','s');
 timeStamp = datestr(now);
 fileName = [dataDirectoryPath, subjectID, '_RivalryTargetDots_', datestr(now,'ddmmmyyyy')];
 
@@ -149,6 +175,10 @@ for numRep = 1:numReps
                     responseArray(trialNum).contrast = contrast;
                     responseArray(trialNum).eyeLeftTilt = eyeLeftTilt;
                     responseArray(trialNum).eyeTargetDots = eyeTargetDots;
+                    
+                    % choose rivalry duration randomly, uniformly within range
+                    responseArray(trialNum).rivalryDuration = ...
+                        rivalryDurationRange(1) + rand*diff(rivalryDurationRange);
 
                     trialNum = trialNum + 1;
 
@@ -175,15 +205,19 @@ for numCatchTrials = 1:round(trialNum*proportionCatchTrials/2)
         responseArray(trialNum).eyeTargetDots = eyeTargetDots;
         responseArray(trialNum).gratingOrientation = gratingOrientation;
         
+        % choose rivalry duration randomly, uniformly within range
+        responseArray(trialNum).rivalryDuration = ...
+            rivalryDurationRange(1) + rand*diff(rivalryDurationRange);
+        
         trialNum = trialNum +1;
     end 
 end
 
 %% Store the experiment info
-expt.responseType = responseType;
 expt.numReps = numReps;
 expt.spatialFreq = spatialFreq;
-expt.responseDuration = responseDuration;
+expt.rivalryDurationRange = rivalryDurationRange;
+expt.targetDot = targetDot;
 expt.alignmentOption = alignmentOption;
 expt.soundOn = soundOn;
 expt.timeStamp = timeStamp;
@@ -210,6 +244,7 @@ for j = 1:totalNumTrials
     
     contrast = responseArray(currentTrial).contrast;
     eyeTargetDots = responseArray(currentTrial).eyeTargetDots;
+    rivalryDuration = responseArray(currentTrial).rivalryDuration;
     
     switch responseArray(currentTrial).trialType
         case 0 % normal trial
@@ -224,8 +259,8 @@ for j = 1:totalNumTrials
             end
         case 1 % catch trial
             gratingOrientation = responseArray(currentTrial).gratingOrientation;
-            leftTargetOrient = targetOrientation;
-            rightTargetOrient = targetOrientation;
+            leftTargetOrient = gratingOrientation;
+            rightTargetOrient = gratingOrientation;
     end
     
     switch alignmentOption
@@ -247,10 +282,12 @@ for j = 1:totalNumTrials
     [responseArray(currentTrial).times, responseArray(currentTrial).keyboardEvent]  = ...
         presentRivalryTargetDots (window, spatialFreq, contrast, ...
         eyeTargetDots, leftTargetOrient, rightTargetOrient, ...
-        responseDuration, leftKeyCode, rightKeyCode, devNums);
+        rivalryDuration, targetDot, leftKeyCode, rightKeyCode, devNums);
 
     % Save after each trial
-    save(fileName, 'subjectID', 'expt', 'randomOrderVector', 'responseArray');   
+    if saveData
+        save(fileName, 'subjectID', 'expt', 'randomOrderVector', 'responseArray');
+    end
 end
      
 %% Clean up

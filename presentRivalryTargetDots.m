@@ -1,7 +1,7 @@
 function [responseTimes, responseKeyboardEvent] = ...
     presentRivalryTargetDots(window, spatialFrequency, michelsonContrast, ...
         eyeTargetDots, leftTargetOrient, rightTargetOrient, ...
-        responseDuration, leftKeyCode, rightKeyCode, devNums)
+        responseDuration, target, leftKeyCode, rightKeyCode, devNums)
 
 % presentRivalryTargetDpts
 %
@@ -30,10 +30,13 @@ end;
 
 echo off  % Prevents MATLAB from reprinting the source code when the program runs.
 
+% Get frame duration
+ifi = Screen('GetFlipInterval', window);
+slack = ifi/2;
+
 pixelsPerCycle = pixelsPerDegree / spatialFrequency; % How many pixels will each period/cycle occupy?
 cyclesPerPixel = 1/pixelsPerCycle; % How many periods/cycles are there in a pixel?
 radiansPerPixel = cyclesPerPixel * (2 * pi); % = (periods per pixel) * (2 pi radians per period)
-
 
 % Set diameter of rivalry gratings as well as diameter and thickness of Convergence
 % annulus
@@ -157,12 +160,12 @@ end
 tex = Screen('MakeTexture', window, gratingTexture);
 
 % Target dots
-% ** should move these out of this function
-nTargetDots = 6;
-targetColor = 0.5;
-targetSz = 50;
-targetSigma = 8;
-targetAmp = 0.8;
+% % example params
+% target.nDots = 6;
+% target.color = 0.5;
+% target.sz = 50;
+% target.sigma = 8;
+% target.amp = 0.8;
 
 % Find the dot positions
 % First find the distance between the center of the screen and the center of the gratings
@@ -171,7 +174,7 @@ gratingCenterDistance = (size(imageMatrixOrient1Target,2) + ...
 % Next find the distance between the 
 centerTargetDistance = size(imageMatrixOrient1Target,1)/2*0.5; % put the targets half way between the center of the grating and the edge of the annulus
 
-targetAngle = 2*pi/(nTargetDots-1); % subtract 1, since we will add one in the center
+targetAngle = 2*pi/(target.nDots-1); % subtract 1, since we will add one in the center
 targetAngles = [0:targetAngle:2*pi-targetAngle];
 targetXs = centerTargetDistance*sin(targetAngles);
 targetYs = centerTargetDistance*cos(targetAngles);
@@ -186,12 +189,12 @@ else
 end
 
 % Find target rects
-targetRects = CenterRectOnPoint([0 0 targetSz targetSz], targetPositions(:,1), targetPositions(:,2));
+targetRects = CenterRectOnPoint([0 0 target.sz target.sz], targetPositions(:,1), targetPositions(:,2));
 
 % Make a target dot
 % 2-layer masking
-targetDot(:,:,1) = ones(targetSz)*targetColor;
-targetDot(:,:,2) = make2DGaussianCentered(targetSz, targetSz, 0, 0, targetSigma, targetAmp); % transparent layer, 0 is completely transparent
+targetDot(:,:,1) = ones(target.sz)*target.color;
+targetDot(:,:,2) = make2DGaussianCentered(target.sz, target.sz, 0, 0, target.sigma, target.amp); % transparent layer, 0 is completely transparent
 
 targettex = Screen('MakeTexture', window, targetDot*white);
 
@@ -268,13 +271,13 @@ responseKeyboardEvent(dataIndex) = 99;
 
 % Now present the target dots on top of the rivalry images
 Screen('DrawTexture', window, tex);
-Screen('DrawTextures', window, repmat(targettex, 1, nTargetDots), ...
+Screen('DrawTextures', window, repmat(targettex, 1, target.nDots), ...
     [], targetRects');
 timeFlipTargets = Screen('Flip', window);
 
 % make sure we don't leave a lingering image
 Screen('DrawTexture', window, blanktex);
-Screen('Flip', window, timeFlipTargets + targetDur - slack);
+Screen('Flip', window, timeFlipTargets + target.duration - slack);
 
 % Shut down realtime-mode:
 % kluge to deal with random intermittent crashes until MacOS is updated
