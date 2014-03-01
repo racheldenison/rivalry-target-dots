@@ -1,6 +1,4 @@
-function rd_targetDotsDemo
-
-% rd_targetDotsDemo
+% rd_targetDotsDemo.m
 %
 % Demo of the "target dots" method of measuring partial dominance. Rivalry
 % stimuli appear for a variable duration. Then the target dots (local
@@ -33,8 +31,11 @@ targetDisplayPath ='/Applications/MATLAB71/toolbox/matlab/michael_silver/OSX/Rac
 % further specify the path for the displayParams file
 targetDisplayName = 'Minor_582J_rivalry';
 
+% testing location
+location = 'laptop';
+
 % get device numbers
-devNums = findKeyboardDevNumsAtLocation; % testing room
+devNums = findKeyboardDevNumsAtLocation(location); % testing room
 if isempty(devNums.Keypad)
     error('Could not find Keypad! Please check findKeyboardDevNums.')
 end
@@ -79,14 +80,20 @@ numEyeLeftTiltVariations = length(eyeLeftTiltParam);
 eyeTargetDotsParam = [1 2]; % in which eye are the target dots presented?
 numEyeTargetDotsVariations = length(eyeTargetDotsParam);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 spaceBetweenMultiplier = 3;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PTB-3 correctly installed and functional? Abort otherwise.
+AssertOpenGL;
 
 Screen('Preference', 'VisualDebuglevel', 3); % replaces startup screen with black display
 screenNumber = max(Screen('Screens'));
 
-window = Screen('OpenWindow', screenNumber);
+% window = Screen('OpenWindow', screenNumber);
+window = Screen('OpenWindow', 0, [], [0 0 800 600]);
+
+% Enable alpha-blending, set it to desired blend equation.
+% Screen('BlendFunction', win, GL_ONE, GL_ONE); % if alpha blending the gabors
+Screen('BlendFunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); % if using a transparent mask
 
 targetDisplay = loadDisplayParams_OSX('path',targetDisplayPath,'displayName',targetDisplayName,'cmapDepth',8); 
  
@@ -222,7 +229,6 @@ Screen('Flip', window);
 KbWait(devNums.Keypad); 
 
 for j = 1:totalNumTrials
-
     currentTrial = randomOrderVector(j);
     
     contrast = responseArray(currentTrial).contrast;
@@ -272,9 +278,8 @@ for j = 1:totalNumTrials
  
     fileName = [dataDirectoryPath,subjectID,'_RivalryTargetDots_',datestr(now,'ddmmmyyyy')];
    
-    save (fileName ,'subjectID' , 'timeStamp', 'responseArray', 'randomOrderVector','expt'); 
-     
-end; % for  
+    save (fileName ,'subjectID' , 'timeStamp', 'responseArray', 'randomOrderVector','expt');   
+end
      
 Screen('CloseAll');  
 ShowCursor;

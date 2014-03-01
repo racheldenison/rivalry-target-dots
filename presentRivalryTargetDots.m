@@ -1,5 +1,5 @@
 function [responseTimes, responseKeyboardEvent] = ...
-    presentRivalryTargetDots(window, spatialFrequency, contrast, ...
+    presentRivalryTargetDots(window, spatialFrequency, michelsonContrast, ...
         eyeTargetDots, leftTargetOrient, rightTargetOrient, ...
         responseDuration, leftKeyCode, rightKeyCode, devNums)
 
@@ -17,7 +17,6 @@ function [responseTimes, responseKeyboardEvent] = ...
 
 
 global pixelsPerDegree;
-
 if isempty(pixelsPerDegree)
     pixelsPerDegree = 99; % this is with NEC Monitor with subject sitting 5 feet from the screen. 1280 x 1024 pixel fullscreen.
     display ('in present rivalry targets - passing global variable ppd did not work');
@@ -106,8 +105,6 @@ responseCircle = (x.^2 + y.^2) < (responseCircleDiameterPixels/2)^2;
 responseCircle = ~responseCircle;
 
 %----------------------------------------------------------------------
-michelsonContrast = contrast;
-
 a1 = cos(tiltInRadiansOrient1Target) * radiansPerPixel;
 b1 = sin(tiltInRadiansOrient1Target) * radiansPerPixel;
 phase = 0;
@@ -115,7 +112,6 @@ phase = 0;
 imageMatrixOrient1Target =...
     (gray + absoluteDifferenceBetweenWhiteAndGray * michelsonContrast * ...
     sin(a1*x+b1*y+phase).* circularMaskMatrix)  .*  convergenceAnnulus;
-
 
 a2=cos(tiltInRadiansOrient2Target)*radiansPerPixel;
 b2=sin(tiltInRadiansOrient2Target)*radiansPerPixel;
@@ -166,14 +162,14 @@ nTargetDots = 6;
 targetColor = 0.5;
 targetSz = 50;
 targetSigma = 8;
-targetAmp = 0.5;
+targetAmp = 0.8;
 
 % Find the dot positions
 % First find the distance between the center of the screen and the center of the gratings
 gratingCenterDistance = (size(imageMatrixOrient1Target,2) + ...
     size(graySpacerMatrix,2))/2;
 % Next find the distance between the 
-centerTargetDistance = size(imageMatrixOrient1Target,1)*0.5; % put the targets half way between the center of the grating and the edge of the annulus
+centerTargetDistance = size(imageMatrixOrient1Target,1)/2*0.5; % put the targets half way between the center of the grating and the edge of the annulus
 
 targetAngle = 2*pi/(nTargetDots-1); % subtract 1, since we will add one in the center
 targetAngles = [0:targetAngle:2*pi-targetAngle];
@@ -188,6 +184,9 @@ if eyeTargetDots==1 % target dots in left eye
 else    
     targetPositions = [cx + gratingCenterDistance + targetXs; cy + targetYs]';
 end
+
+% Find target rects
+targetRects = CenterRectOnPoint([0 0 targetSz targetSz], targetPositions(:,1), targetPositions(:,2));
 
 % Make a target dot
 % 2-layer masking
@@ -218,8 +217,6 @@ responseTimes(1) = 0;
 responseKeyboardEvent(1) = 0;
 leftKeyWasDown = 0;
 rightKeyWasDown = 0;
-
-timeFlipBlank = GetSecs;
 
 % Display the rivalry gratings
 % Draw images
@@ -268,11 +265,16 @@ end
 % the response duration ends
 responseTimes(dataIndex) = toc;
 responseKeyboardEvent(dataIndex) = 99;
-dataIndex = dataIndex + 1;
+
+% Now present the target dots on top of the rivalry images
+Screen('DrawTexture', window, tex);
+Screen('DrawTextures', window, repmat(targettex, 1, nTargetDots), ...
+    [], targetRects');
+timeFlipTargets = Screen('Flip', window);
 
 % make sure we don't leave a lingering image
 Screen('DrawTexture', window, blanktex);
-Screen('Flip', window);
+Screen('Flip', window, timeFlipTargets + targetDur - slack);
 
 % Shut down realtime-mode:
 % kluge to deal with random intermittent crashes until MacOS is updated
