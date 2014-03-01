@@ -11,66 +11,20 @@
 %
 % Rachel Denison, 28 Feb 2014
 
-
-% Start by removing anything left over in the memory:
-clear all; 
-close all;
-
 global pixelsPerDegree;
 global spaceBetweenMultiplier;
 
-% --------------------------------- 
-% User-defined values, might vary by testing room. Check these before running. 
-
-% specify where the resulting datafile will be stored
-dataDirectoryPath = '/Applications/MATLAB71/toolbox/matlab/michael_silver/OSX/Rachel/Repetition_Rivalry/data/'; % testing room
-
-% specify the path for the displayParams file
-targetDisplayPath ='/Applications/MATLAB71/toolbox/matlab/michael_silver/OSX/Rachel/Displays/'; % testing room
-
-% further specify the path for the displayParams file
-targetDisplayName = 'Minor_582J_rivalry';
-
+%% Set up
 % testing location
 location = 'laptop';
 
-% get device numbers
-devNums = findKeyboardDevNumsAtLocation(location); % testing room
-if isempty(devNums.Keypad)
-    error('Could not find Keypad! Please check findKeyboardDevNums.')
-end
+% i/o
+dataDirectoryPath = 'data/';
 
-% sound on?
-sound_on = 1; % 1 for on, 0 for off
-
-alignmentOption = 'annulusOnly'; % [smiley annulusOnly]
-
-% number of repetitions of each condition
-numReps = 3;
-% ----------------------------------- 
-
-% initializations
-v = [1:2000];
-soundvector = 0.25 * sin(2*pi*v/30); %a nice beep at 2kH samp freq 
-
+% params
 spatialFreq = 3;
 responseDuration = 10;
 
-alignmentTargetKeypress = 0; % 1 to wait for a keypress after each alignment target presentation, 0 to go on automatically
-alignmentTargetDuration = 1; % time in secons to leave on alignment targets (if not waiting, can set to empty)
-
-trialNum = 1; % initialize trial index
-
-proportionCatchTrials = 0.1;
-% ** should we have both rivalry catch trials and target dots catch trials
-% (aka target dots in both eyes)?
-
-startText = 'Press any key to begin.';
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Parameters
-
-% streamContrast targetContrast
 contrastParam = [0.1];
 numContrastVariations = length(contrastParam);
 
@@ -80,8 +34,32 @@ numEyeLeftTiltVariations = length(eyeLeftTiltParam);
 eyeTargetDotsParam = [1 2]; % in which eye are the target dots presented?
 numEyeTargetDotsVariations = length(eyeTargetDotsParam);
 
-spaceBetweenMultiplier = 3;
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% number of repetitions of each condition
+numReps = 3;
+
+% catch trials
+% ** should we have both rivalry catch trials and target dots catch trials
+% (aka target dots in both eyes)?
+proportionCatchTrials = 0.1;
+
+% alignment between trials
+alignmentOption = 'annulusOnly'; % [smiley annulusOnly]
+alignmentTargetKeypress = 0; % 1 to wait for a keypress after each alignment target presentation, 0 to go on automatically
+alignmentTargetDuration = 1; % time in secons to leave on alignment targets (if not waiting, can set to empty)
+
+% spacing between rivalry images
+spaceBetweenMultiplier = 3; 
+
+% sound
+soundOn = 1; % 1 for on, 0 for off
+v = 1:2000;
+soundvector = 0.25 * sin(2*pi*v/30); % a nice beep at 2kH samp freq 
+
+%% Hello to the experimenter
+% can write any reminders to the experimenter here
+fprintf('Welcome to the Repetition Target Dots study\n\n');
+
+%% Display setup
 % PTB-3 correctly installed and functional? Abort otherwise.
 AssertOpenGL;
 
@@ -92,22 +70,31 @@ screenNumber = max(Screen('Screens'));
 window = Screen('OpenWindow', 0, [], [0 0 800 600]);
 
 % Enable alpha-blending, set it to desired blend equation.
-% Screen('BlendFunction', win, GL_ONE, GL_ONE); % if alpha blending the gabors
 Screen('BlendFunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); % if using a transparent mask
-
-targetDisplay = loadDisplayParams_OSX('path',targetDisplayPath,'displayName',targetDisplayName,'cmapDepth',8); 
  
-pixelsPerDegree = angle2pix(targetDisplay, 1);   %number of pixels in one degree of visual angle
-
-Screen('LoadNormalizedGammaTable', targetDisplay.screenNumber, targetDisplay.gammaTable);
+%%%% come back %%%%
+% pixelsPerDegree = ang2pix(x);   %number of pixels in one degree of visual angle
+% Screen('LoadNormalizedGammaTable', screenNumber, gammaTable);
  
-fprintf('Welcome to the Repetition Rivalry study\n\n');
-fprintf('Be sure to turn manually turn off console monitor before testing! \n \n')
+black = BlackIndex(window);  % Retrieves the CLUT color code for black.
+white = WhiteIndex(window);  % Retrieves the CLUT color code for white.
+gray = (black + white) / 2;  % Computes the CLUT color code for gray.  
+    
+Screen('TextSize', window, 60);
+
+% Set screen to gray
+Screen('FillRect',window, gray);
+Screen('Flip', window);
+
+%% Keys
+% get device numbers
+devNums = findKeyboardDevNumsAtLocation(location);
+if isempty(devNums.Keypad)
+    error('Could not find Keypad! Please check findKeyboardDevNums.')
+end
 
 KbName('UnifyKeyNames');
- 
-% make sure keyboard is mapped as we want. ================================
- 
+
 leftKey = '4'; % this is our default key  
 rightKey = '5'; % this is our default key  
 
@@ -139,27 +126,15 @@ while ~isempty (response)
     end
 end
 
-% done with key mapping ==================================================
-
+%% Subject ID and filename
 subjectID = input ('\nPlease input the alphanumeric code specifier for the subject: ','s');
 timeStamp = datestr(now);
- 
-black = BlackIndex(window);  % Retrieves the CLUT color code for black.
-white = WhiteIndex(window);  % Retrieves the CLUT color code for white.
-gray = (black + white) / 2;  % Computes the CLUT color code for gray.  
-    
-Screen('TextSize', window, 60);
+fileName = [dataDirectoryPath, subjectID, '_RivalryTargetDots_', datestr(now,'ddmmmyyyy')];
 
-Screen('FillRect',window, gray);
-
-% Show the gray background, return timestamp of flip in 'vbl'
-vbl = Screen('Flip', window);
-
-% ListenChar(2); % tell matlab not to notice keypresses
-
+%% Generate trials
 % Generate all the possible test configurations and store the values as
 % fields in responseArray
-
+trialNum = 1;
 for numRep = 1:numReps
     for numContrast = 1:numContrastVariations
         contrast = contrastParam(numContrast);
@@ -182,7 +157,9 @@ for numRep = 1:numReps
     end % for {numContrast}
 end % for numReps
     
-for numCatchTrials = 1 : round(trialNum*proportionCatchTrials/2) % let us generate 10% catch trials (each run through this loop generates two additional trials)
+% generate catch trials (each run through this loop generates
+% two additional trials)
+for numCatchTrials = 1:round(trialNum*proportionCatchTrials/2) 
     % create 2 catch trials, grating tilts L & R
     for gratingOrientation = 1:2 % left or right, both eyes' gratings have same orientation
         
@@ -199,35 +176,35 @@ for numCatchTrials = 1 : round(trialNum*proportionCatchTrials/2) % let us genera
         responseArray(trialNum).gratingOrientation = gratingOrientation;
         
         trialNum = trialNum +1;
-        
-    end % for {gratingOrientation}
-end % for {numCatchTrials}
+    end 
+end
 
-% store the experiment params
+%% Store the experiment info
 expt.responseType = responseType;
 expt.numReps = numReps;
 expt.spatialFreq = spatialFreq;
 expt.responseDuration = responseDuration;
 expt.alignmentOption = alignmentOption;
-expt.soundOn = sound_on;
+expt.soundOn = soundOn;
+expt.timeStamp = timeStamp;
 
-% Now it's time to do the experiment
-
+%% Ready for the experiment
 totalNumTrials = trialNum - 1 % adjust for final increment above
 
 % create random  vector to scramble presentation order
 randomOrderVector = randperm (totalNumTrials);
 
-if sound_on
+if soundOn
     sound (soundvector, 8000); % make a beep to say we're ready
 end
 
 % Opportunity to align stereoscope
 presentAlignmentTargetsWaitOption (window, devNums, 1, []) ;  % present alignment targets and wait for a keypress
-DrawFormattedText(window, startText, 0, 'center', [255 255 255]);
+DrawFormattedText(window, 'Press any key to begin', 0, 'center', [255 255 255]);
 Screen('Flip', window);
 KbWait(devNums.Keypad); 
 
+%% Present trials
 for j = 1:totalNumTrials
     currentTrial = randomOrderVector(j);
     
@@ -235,7 +212,7 @@ for j = 1:totalNumTrials
     eyeTargetDots = responseArray(currentTrial).eyeTargetDots;
     
     switch responseArray(currentTrial).trialType
-        case {0} % normal trial
+        case 0 % normal trial
             eyeLeftTilt = responseArray(currentTrial).eyeLeftTilt;
 
             if eyeLeftTilt == 1
@@ -245,7 +222,7 @@ for j = 1:totalNumTrials
                 leftTargetOrient = 2; % right
                 rightTargetOrient = 1; % left 
             end
-        case {1} % catch trial
+        case 1 % catch trial
             gratingOrientation = responseArray(currentTrial).gratingOrientation;
             leftTargetOrient = targetOrientation;
             rightTargetOrient = targetOrientation;
@@ -262,7 +239,7 @@ for j = 1:totalNumTrials
             end
     end    
     
-    if sound_on
+    if soundOn
         sound (soundvector, 8000); % make a beep
     end
     
@@ -272,16 +249,11 @@ for j = 1:totalNumTrials
         eyeTargetDots, leftTargetOrient, rightTargetOrient, ...
         responseDuration, leftKeyCode, rightKeyCode, devNums);
 
-    % Save data (using save). The responses are progressively saved, so that if
-    % we crash, at least we'll still have a file with all the data collected up
-    % to that point.
- 
-    fileName = [dataDirectoryPath,subjectID,'_RivalryTargetDots_',datestr(now,'ddmmmyyyy')];
-   
-    save (fileName ,'subjectID' , 'timeStamp', 'responseArray', 'randomOrderVector','expt');   
+    % Save after each trial
+    save(fileName, 'subjectID', 'expt', 'randomOrderVector', 'responseArray');   
 end
      
+%% Clean up
 Screen('CloseAll');  
 ShowCursor;
-%ListenChar(0);
  
