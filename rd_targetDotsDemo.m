@@ -29,13 +29,20 @@ dataDirectoryPath = 'data/';
 
 % screen
 % RD' laptop
-screenSize = [9 13]; % (in)
-screenRes = [900 1440];
-viewDist = 50; % (in)
+switch location
+    case 'laptop'
+        screenSize = [9 13]; % (in)
+        screenRes = [900 1440];
+        viewDist = 50; % (in)
+    case 'melbourne'
+        % melbourne settings
+    otherwise
+        error('where are we???')
+end
 
 % rivalry params
 spatialFreq = 3;
-rivalryDurationRange = [1 3];
+rivalryDurationRange = [1 3]; % (s)
 
 contrastParam = 1;
 numContrastVariations = length(contrastParam);
@@ -52,10 +59,10 @@ numReps = 3;
 % target dot params
 targetDot.nDots = 6;
 targetDot.color = 0.5;
-targetDot.sz = 50;
-targetDot.sigma = 8;
+targetDot.sz = 50; % (pixels)
+targetDot.sigma = 8; % (pixels)
 targetDot.amp = 0.8;
-targetDot.duration = 0.3;
+targetDot.duration = 0.3; % (s)
 
 % catch trials
 % ** should we have both rivalry catch trials and target dots catch trials
