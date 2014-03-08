@@ -1,4 +1,4 @@
-function  presentBlankAlignmentTargetsWaitOption (window, devNums, waitForKeypress, waitTimeInSecs)
+function  presentBlankAlignmentTargetsWaitOption (window, devNums, waitForKeypress, waitTimeInSecs, fixationOn)
 
 % puts identical left and right target annulus images on screen so subjects can
 % adjust the stereoscope to achieve binocular fusion
@@ -48,6 +48,9 @@ end;
 halfWidthOfGrid =  (widthOfGrid / 2);
 widthArray = (-halfWidthOfGrid) : halfWidthOfGrid;  % widthArray is used in creating the meshgrid.
 
+% Set fixation point dimensions
+fixPointDiameterDegrees = 0.1; % Diameter of the fixation point
+fixPointDiameterPixels = fixPointDiameterDegrees * pixelsPerDegree;
 
 % ---------- Color Setup ----------
 % Gets color values.
@@ -80,11 +83,17 @@ convergenceAnnulus = ...
     ((x.^2 + y.^2) <  (convergenceAnnulusDiameterPixels/2)^2 )  ;
 convergenceAnnulus = ~convergenceAnnulus; %when we multiply this, it will create an annulus of zero/black
 
+fixPoint = (x.^2 + y.^2) < (fixPointDiameterPixels/2)^2;
+fixPoint = ~fixPoint;
 
 %----------------------------------------------------------------------
 
 blankTargetMatrix = ones(widthOfGrid+1, widthOfGrid+1) * gray;
 alignmentImageMatrix = blankTargetMatrix .*convergenceAnnulus;
+
+if fixationOn
+    alignmentImageMatrix = alignmentImageMatrix .* fixPoint;
+end
 
 graySpacerMatrix =  ones(widthOfGrid+1,(widthOfGrid)*spaceBetweenMultiplier)* gray;
 

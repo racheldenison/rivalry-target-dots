@@ -1,7 +1,7 @@
 function [responseTimes, responseKeyboardEvent] = ...
     presentRivalryTargetDots(window, spatialFrequency, michelsonContrast, ...
         eyeTargetDots, leftTargetOrient, rightTargetOrient, ...
-        responseDuration, target, leftKeyCode, rightKeyCode, devNums)
+        responseDuration, target, fixationOn, leftKeyCode, rightKeyCode, devNums)
 
 % presentRivalryTargetDpts
 %
@@ -57,6 +57,10 @@ end;
 halfWidthOfGrid =  (widthOfGrid / 2);
 widthArray = (-halfWidthOfGrid) : halfWidthOfGrid;  % widthArray is used in creating the meshgrid.
 
+% Set fixation point dimensions
+fixPointDiameterDegrees = 0.1; % Diameter of the fixation point
+fixPointDiameterPixels = fixPointDiameterDegrees * pixelsPerDegree;
+
 % Set response target dimensions
 responseCircleDiameterDegrees = 0.5;
 responseCircleDiameterPixels = responseCircleDiameterDegrees * pixelsPerDegree;
@@ -104,6 +108,9 @@ convergenceAnnulus = ...
 
 convergenceAnnulus = ~convergenceAnnulus; %when we multiply this, it will create an annulus of zero/black
 
+fixPoint = (x.^2 + y.^2) < (fixPointDiameterPixels/2)^2;
+fixPoint = ~fixPoint;
+
 responseCircle = (x.^2 + y.^2) < (responseCircleDiameterPixels/2)^2;
 responseCircle = ~responseCircle;
 
@@ -123,6 +130,11 @@ imageMatrixOrient2Target= ...
     (gray + absoluteDifferenceBetweenWhiteAndGray* michelsonContrast * ...
     sin(a2*x+b2*y-phase).* circularMaskMatrix)  .* convergenceAnnulus;
 
+if fixationOn
+    imageMatrixOrient1Target = imageMatrixOrient1Target .* fixPoint;
+    imageMatrixOrient2Target = imageMatrixOrient2Target .* fixPoint;
+end
+
 %----------------------------------------------------------------------
 % Note that each entry of matrices varies between minus one and one;
 % multiplying these matrices by absoluteDifferenceBetweenWhiteAndGray
@@ -133,6 +145,10 @@ graySpacerMatrix =  ones(widthOfGrid+1,(widthOfGrid)*spaceBetweenMultiplier ) * 
 
 blankTargetMatrix = ones(widthOfGrid+1, widthOfGrid+1) * gray;
 blankedGratingMatrix = blankTargetMatrix .*convergenceAnnulus;
+
+if fixationOn
+    blankedGratingMatrix = blankedGratingMatrix .* fixPoint;
+end
 
 blankTexture = [blankedGratingMatrix, graySpacerMatrix, blankedGratingMatrix];
 blanktex = Screen('MakeTexture', window, blankTexture);

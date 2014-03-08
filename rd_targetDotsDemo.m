@@ -69,6 +69,9 @@ targetDot.duration = 0.3; % (s)
 % (aka target dots in both eyes)?
 proportionCatchTrials = 0.1;
 
+% fixation point
+fixationOn = 1; % 1 for on, 0 for off
+
 % alignment between trials
 alignmentOption = 'annulusOnly'; % [smiley annulusOnly]
 alignmentTargetKeypress = 0; % 1 to wait for a keypress after each alignment target presentation, 0 to go on automatically
@@ -105,7 +108,7 @@ pixelsPerDegree = ang2pix(1.0, screenSize(1), screenRes(1), viewDist, 'central')
 if exist('gammaTable','var')
     Screen('LoadNormalizedGammaTable', screenNumber, gammaTable);
 else
-    fprintf('/nNot loading gamma table/n')
+    fprintf('\nNot loading gamma table\n')
 end
  
 black = BlackIndex(window);  % Retrieves the CLUT color code for black.
@@ -275,7 +278,7 @@ for j = 1:totalNumTrials
             presentAlignmentTargetsWaitOption (window, devNums, alignmentTargetKeypress, alignmentTargetDuration) ;  % present alignment targets
         case 'annulusOnly'
             if j==1
-                presentBlankAlignmentTargetsWaitOption (window, devNums, alignmentTargetKeypress, alignmentTargetDuration) ;  % present alignment targets
+                presentBlankAlignmentTargetsWaitOption (window, devNums, alignmentTargetKeypress, alignmentTargetDuration, fixationOn) ;  % present alignment targets
             else
                 WaitSecs(alignmentTargetDuration);
             end
@@ -289,7 +292,8 @@ for j = 1:totalNumTrials
     [responseArray(currentTrial).times, responseArray(currentTrial).keyboardEvent]  = ...
         presentRivalryTargetDots (window, spatialFreq, contrast, ...
         eyeTargetDots, leftTargetOrient, rightTargetOrient, ...
-        rivalryDuration, targetDot, leftKeyCode, rightKeyCode, devNums);
+        rivalryDuration, targetDot, fixationOn, ...
+        leftKeyCode, rightKeyCode, devNums);
 
     % Save after each trial
     if saveData
