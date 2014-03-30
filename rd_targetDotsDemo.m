@@ -11,8 +11,8 @@
 %
 % Rachel Denison, 28 Feb 2014
 
-clear all
-close all
+% clear all
+% close all
 
 global pixelsPerDegree;
 global spaceBetweenMultiplier;
@@ -298,8 +298,8 @@ for j = 1:totalNumTrials
         leftKeyCode, rightKeyCode, devNums);
     
     % Present the response screen
-    presentTargetDotResponseScreen(window, targetDot.responseISI, ...
-        blankTexture, targetRects, devNums, white)
+    responseArray(currentTrial).selectedTargets = presentTargetDotResponseScreen(window, targetDot.responseISI, targetDot.nDots, ...
+        blankTexture, targetRects, white);
 
 
     % Save after each trial
