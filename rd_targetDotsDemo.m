@@ -79,7 +79,7 @@ alignmentTargetKeypress = 0; % 1 to wait for a keypress after each alignment tar
 alignmentTargetDuration = 1; % time in secons to leave on alignment targets (if not waiting, can set to empty)
 
 % spacing between rivalry images
-spaceBetweenMultiplier = 1; % standard is 3
+spaceBetweenMultiplier = 3; % standard is 3
 
 % sound
 soundOn = 1; % 1 for on, 0 for off
@@ -97,8 +97,8 @@ AssertOpenGL;
 Screen('Preference', 'VisualDebuglevel', 3); % replaces startup screen with black display
 screenNumber = max(Screen('Screens'));
 
-% window = Screen('OpenWindow', screenNumber);
-window = Screen('OpenWindow', 0, [], [0 0 800 600]); % for testing
+window = Screen('OpenWindow', screenNumber);
+% window = Screen('OpenWindow', 0, [], [0 0 800 600]); % for testing
 
 % Enable alpha-blending, set it to desired blend equation.
 Screen('BlendFunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); % if using a transparent mask
