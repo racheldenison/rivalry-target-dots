@@ -14,6 +14,7 @@ Screen('Flip', window);
 % Collect responses
 iClick = 1;
 keepGoing = 1;
+selectedTargets = [];
 while keepGoing
     % Collect mouse click
     [mouseX, mouseY, buttons] = GetMouse(window);

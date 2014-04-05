@@ -64,7 +64,7 @@ targetDot.sigma = 8; % (pixels)
 targetDot.amp = 0.8;
 targetDot.duration = 0.3; % (s)
 targetDot.responseISI = 0.5; % how long before putting up the response screen?
-targetDot.nRampSteps = 60;
+targetDot.nRampSteps = 12;
 
 % catch trials
 % ** should we have both rivalry catch trials and target dots catch trials
