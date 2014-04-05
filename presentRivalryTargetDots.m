@@ -182,6 +182,7 @@ tex = Screen('MakeTexture', window, gratingTexture);
 % target.sz = 50;
 % target.sigma = 8;
 % target.amp = 0.8;
+% target.nRampSteps = 6;
 
 % Find the dot positions
 % First find the distance between the center of the screen and the center of the gratings
@@ -214,11 +215,18 @@ allTargetPositions = [(cx - gratingCenterDistance + targetXs) ...
 allTargetRects = CenterRectOnPoint([0 0 target.sz target.sz], allTargetPositions(:,1), allTargetPositions(:,2));
 
 % Make a target dot
-% 2-layer masking
-targetDot(:,:,1) = ones(target.sz)*target.color;
-targetDot(:,:,2) = make2DGaussianCentered(target.sz, target.sz, 0, 0, target.sigma, target.amp); % transparent layer, 0 is completely transparent
-
-targettex = Screen('MakeTexture', window, targetDot*white);
+% cosine ramp on
+nSteps = target.nRampSteps;
+ramp = -cos(pi/nSteps:pi/nSteps:pi)/2 + 0.5;
+for iStep = 1:nSteps
+    amp = target.amp*ramp(iStep);
+    
+    % 2-layer masking
+    targetDot(:,:,1) = ones(target.sz)*target.color;
+    targetDot(:,:,2) = make2DGaussianCentered(target.sz, target.sz, 0, 0, target.sigma, amp); % transparent layer, 0 is completely transparent
+    
+    targettex(iStep) = Screen('MakeTexture', window, targetDot*white);
+end
 
 % Switch to realtime:
 priorityLevel=MaxPriority(window);
@@ -292,10 +300,12 @@ responseTimes(dataIndex) = toc;
 responseKeyboardEvent(dataIndex) = 99;
 
 % Now present the target dots on top of the rivalry images
-Screen('DrawTexture', window, tex);
-Screen('DrawTextures', window, repmat(targettex, 1, target.nDots), ...
-    [], targetRects');
-timeFlipTargets = Screen('Flip', window);
+for iStep = 1:nSteps
+    Screen('DrawTexture', window, tex);
+    Screen('DrawTextures', window, repmat(targettex(iStep), 1, target.nDots), ...
+        [], targetRects');
+    timeFlipTargets = Screen('Flip', window);
+end
 
 % make sure we don't leave a lingering image
 Screen('DrawTexture', window, blanktex);
