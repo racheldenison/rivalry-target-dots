@@ -1,6 +1,6 @@
-function [responseTimes, responseKeyboardEvent allTargetRects, blankTexture] = ...
+function [responseTimes, responseKeyboardEvent, targetsPresented, allTargetRects, blankTexture] = ...
     presentRivalryTargetDots(window, spatialFrequency, michelsonContrast, ...
-        eyeTargetDots, leftTargetOrient, rightTargetOrient, ...
+        eyeTargetDots, leftTargetOrient, rightTargetOrient, catchTrial, ...
         responseDuration, target, fixationOn, leftKeyCode, rightKeyCode, devNums)
 
 % presentRivalryTargetDpts
@@ -192,16 +192,19 @@ gratingCenterDistance = (size(imageMatrixOrient1Target,2) + ...
 % Next find the distance between the 
 centerTargetDistance = size(imageMatrixOrient1Target,1)/2*0.5; % put the targets half way between the center of the grating and the edge of the annulus
 
+% Target angles
 if target.centerOn
     targetAngle = 2*pi/(target.nDots-1); % subtract 1, since we will add one in the center
 else
     targetAngle = 2*pi/target.nDots;
 end
 targetAngles = [0:targetAngle:2*pi-targetAngle];
+
+% Target x and y positions
 targetXs = centerTargetDistance*sin(targetAngles);
 targetYs = centerTargetDistance*cos(targetAngles);
-% add a target in the center of the grating
 if target.centerOn
+    % add a target in the center of the grating
     targetXs = [targetXs 0];
     targetYs = [targetYs 0];
 end
@@ -220,6 +223,15 @@ allTargetPositions = [(cx - gratingCenterDistance + targetXs) ...
     (cx + gratingCenterDistance + targetXs); ...
     (cy + targetYs) (cy + targetYs)]';
 allTargetRects = CenterRectOnPoint([0 0 target.sz target.sz], allTargetPositions(:,1), allTargetPositions(:,2));
+
+% In a target dots catch trial, present only some targets
+if catchTrial
+    targetsPresented = randperm(target.nDots);
+    targetsPresented = sort(targetsPresented(1:randi(target.nDots)));
+else
+    targetsPresented = 1:target.nDots;
+end
+targetRects = targetRects(targetsPresented,:);
 
 % Make a target dot
 % cosine ramp on
@@ -309,7 +321,7 @@ responseKeyboardEvent(dataIndex) = 99;
 % Now present the target dots on top of the rivalry images
 for iStep = 1:nSteps
     Screen('DrawTexture', window, tex);
-    Screen('DrawTextures', window, repmat(targettex(iStep), 1, target.nDots), ...
+    Screen('DrawTextures', window, repmat(targettex(iStep), 1, size(targetRects,1)), ...
         [], targetRects');
     timeFlipTargets = Screen('Flip', window);
 end

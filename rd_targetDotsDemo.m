@@ -270,10 +270,12 @@ for j = 1:totalNumTrials
                 leftTargetOrient = 2; % right
                 rightTargetOrient = 1; % left 
             end
+            catchTrial = 0;
         case 1 % catch trial
             gratingOrientation = responseArray(currentTrial).gratingOrientation;
             leftTargetOrient = gratingOrientation;
             rightTargetOrient = gratingOrientation;
+            catchTrial = 1;
     end
     
     switch alignmentOption
@@ -293,14 +295,14 @@ for j = 1:totalNumTrials
     
     % Present the rivalry stimuli for this trial
     [responseArray(currentTrial).times, responseArray(currentTrial).keyboardEvent, ...
-        targetRects, blankTexture]  = ...
+        responseArray(currentTrial).targetsPresented, targetRects, blankTexture]  = ...
         presentRivalryTargetDots (window, spatialFreq, contrast, ...
-        eyeTargetDots, leftTargetOrient, rightTargetOrient, ...
+        eyeTargetDots, leftTargetOrient, rightTargetOrient, catchTrial, ...
         rivalryDuration, targetDot, fixationOn, ...
         leftKeyCode, rightKeyCode, devNums);
     
     % Present the response screen
-    responseArray(currentTrial).selectedTargets = presentTargetDotResponseScreen(window, targetDot.responseISI, targetDot.nDots, ...
+    responseArray(currentTrial).selectedTargets = presentTargetDotResponseScreen(window, targetDot.responseISI, ...
         blankTexture, targetRects, white);
 
 

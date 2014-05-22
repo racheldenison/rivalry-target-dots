@@ -1,4 +1,6 @@
-function selectedTargets = presentTargetDotResponseScreen(window, isi, nTargets, blankTexture, targetRects, white)
+function selectedTargets = presentTargetDotResponseScreen(window, isi, blankTexture, targetRects, white)
+
+nTargets = size(targetRects,1)/2;
 
 % ISI before putting up the response circles
 WaitSecs(isi); % Note this is not timed precisely!
