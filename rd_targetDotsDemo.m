@@ -99,8 +99,8 @@ AssertOpenGL;
 Screen('Preference', 'VisualDebuglevel', 3); % replaces startup screen with black display
 screenNumber = max(Screen('Screens'));
 
-% window = Screen('OpenWindow', screenNumber);
-window = Screen('OpenWindow', 0, [], [0 0 800 600]); % for testing
+window = Screen('OpenWindow', screenNumber);
+% window = Screen('OpenWindow', 0, [], [0 0 800 600]); % for testing
 
 % Enable alpha-blending, set it to desired blend equation.
 Screen('BlendFunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); % if using a transparent mask
@@ -249,6 +249,7 @@ end
 presentAlignmentTargetsWaitOption (window, devNums, 1, []) ;  % present alignment targets and wait for a keypress
 DrawFormattedText(window, 'Press any key to begin', 0, 'center', [255 255 255]);
 Screen('Flip', window);
+WaitSecs(.5);
 KbWait(devNums.Keypad); 
 
 %% Present trials
