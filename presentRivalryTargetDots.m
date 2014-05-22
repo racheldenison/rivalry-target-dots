@@ -183,6 +183,7 @@ tex = Screen('MakeTexture', window, gratingTexture);
 % target.sigma = 8;
 % target.amp = 0.8;
 % target.nRampSteps = 6;
+% target.centerOn = 1;
 
 % Find the dot positions
 % First find the distance between the center of the screen and the center of the gratings
@@ -191,13 +192,19 @@ gratingCenterDistance = (size(imageMatrixOrient1Target,2) + ...
 % Next find the distance between the 
 centerTargetDistance = size(imageMatrixOrient1Target,1)/2*0.5; % put the targets half way between the center of the grating and the edge of the annulus
 
-targetAngle = 2*pi/(target.nDots-1); % subtract 1, since we will add one in the center
+if target.centerOn
+    targetAngle = 2*pi/(target.nDots-1); % subtract 1, since we will add one in the center
+else
+    targetAngle = 2*pi/target.nDots;
+end
 targetAngles = [0:targetAngle:2*pi-targetAngle];
 targetXs = centerTargetDistance*sin(targetAngles);
 targetYs = centerTargetDistance*cos(targetAngles);
 % add a target in the center of the grating
-targetXs = [targetXs 0];
-targetYs = [targetYs 0];
+if target.centerOn
+    targetXs = [targetXs 0];
+    targetYs = [targetYs 0];
+end
 
 if eyeTargetDots==1 % target dots in left eye
     targetPositions = [cx - gratingCenterDistance + targetXs; cy + targetYs]';

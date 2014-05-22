@@ -65,6 +65,7 @@ targetDot.amp = 0.8;
 targetDot.duration = 0.3; % (s)
 targetDot.responseISI = 0.5; % how long before putting up the response screen?
 targetDot.nRampSteps = 12;
+targetDot.centerOn = 0;
 
 % catch trials
 % ** should we have both rivalry catch trials and target dots catch trials
@@ -98,8 +99,8 @@ AssertOpenGL;
 Screen('Preference', 'VisualDebuglevel', 3); % replaces startup screen with black display
 screenNumber = max(Screen('Screens'));
 
-window = Screen('OpenWindow', screenNumber);
-% window = Screen('OpenWindow', 0, [], [0 0 800 600]); % for testing
+% window = Screen('OpenWindow', screenNumber);
+window = Screen('OpenWindow', 0, [], [0 0 800 600]); % for testing
 
 % Enable alpha-blending, set it to desired blend equation.
 Screen('BlendFunction', window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); % if using a transparent mask
